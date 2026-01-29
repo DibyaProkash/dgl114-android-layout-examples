@@ -174,3 +174,133 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 ```
+
+#### Understanding Colors in Compose:
+
+- Color(0xFFD0BCFF): The format is 0xAARRGGBB
+    - FF = Alpha (transparency): FF = fully opaque, 00 = fully transparent
+    - D0BCFF = RGB color code (like in CSS)
+
+- "80" and "40": Material Design naming convention
+    - 80 = lighter shade (for dark mode)
+    - 40 = darker shade (for light mode)
+
+### Step 1.5: Create Type.kt
+Right-click on the theme package → New → Kotlin Class/File → Select File → Name: Type
+Paste this code:
+```kotlin
+package com.example.layoutdemo.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+// Defines text styles used throughout the app
+val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,        // sp = scalable pixels (for text)
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    )
+)
+```
+
+#### Understanding Typography:
+- `sp (scalable pixels)`: Used for text sizes, respects user's font size settings
+- `dp (density-independent pixels)`: Used for layout dimensions
+- `Typography`: A collection of text styles you can reuse
+- `Material Design`: Provides predefined text styles (bodyLarge, titleLarge, etc.)
+
+#### Why separate text styles?
+- Consistency: All titles look the same
+- Easy updates: Change font size once, updates everywhere
+- Accessibility: Users with vision impairments can increase text size
+
+### Step 1.6: Create Theme.kt
+Right-click on the theme package → New → Kotlin Class/File → Select File → Name: Theme
+Paste this code:
+```kotlin
+package com.example.layoutdemo.ui.theme
+
+import android.app.Activity
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+
+// Dark mode color scheme
+private val DarkColorScheme = darkColorScheme(
+    primary = Purple80,
+    secondary = PurpleGrey80,
+    tertiary = Pink80
+)
+
+// Light mode color scheme
+private val LightColorScheme = lightColorScheme(
+    primary = Purple40,
+    secondary = PurpleGrey40,
+    tertiary = Pink40
+)
+
+@Composable
+fun LayoutDemoTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(), // Detect system theme
+    dynamicColor: Boolean = true, // Use Android 12+ dynamic colors
+    content: @Composable () -> Unit
+) {
+    val colorScheme = when {
+        // Android 12+ supports dynamic theming (colors from wallpaper)
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        // Use dark theme
+        darkTheme -> DarkColorScheme
+        // Use light theme
+        else -> LightColorScheme
+    }
+    
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.primary.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        }
+    }
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
+}
+```
+
